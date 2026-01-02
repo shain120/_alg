@@ -1,0 +1,1 @@
+[ai chat](https://gemini.google.com/share/d5188a4f14d0)
