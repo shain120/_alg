@@ -46,6 +46,7 @@
 [HW](https://github.com/shain120/_alg/tree/main/hw12)
 
 ### 期中
+[MID](https://github.com/shain120/_alg/tree/main/mid)
 osi七層與ofdm自己寫 參考ifft/fft計算公式
 使用ai加入ui介面與動化，架上燥點模擬真實環境
 
