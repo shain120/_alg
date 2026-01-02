@@ -2,7 +2,7 @@
 ## 111210540 資工三　黃冠勝
 
 ### 習題1: 
-[HW](https://github.com/shain120/_alg/blob/main/hw1/20250917.jpg)
+[HW](https://github.com/shain120/_alg/tree/main/hw1)
 
 ### 習題2: 
 [HW](https://github.com/shain120/_alg/blob/main/hw2/power2n.py)
