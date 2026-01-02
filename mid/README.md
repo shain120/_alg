@@ -3,7 +3,181 @@
 本文件旨在解釋 OFDM (Orthogonal Frequency Division Multiplexing) 模擬程式中產生的兩張核心圖表。這兩張圖分別展示了訊號在**頻域 (Frequency Domain)** 的物理特性與**複數平面 (Complex Plane)** 上的數據調變狀態。
 
 ---
+<img width="1088" height="449" alt="image" src="https://github.com/user-attachments/assets/af51b723-765d-4c3d-b96f-79b87f402046" />
+# OFDM 核心運算原理說明
 
+本文件解析 `ofdm.py` 中 `L1_ofdm` 函式的三個關鍵步驟。這展示了如何利用數位訊號處理 (DSP) 將資料透過無線信道傳輸。
+
+核心流程：**頻域符號 (Tx)** $\xrightarrow{IFFT}$ **時域波形 (Channel)** $\xrightarrow{FFT}$ **頻域符號 (Rx)**
+# OFDM 發送與接收流程說明（IFFT / FFT）
+
+本文件說明以下三個步驟在 **OFDM（Orthogonal Frequency Division Multiplexing）** 系統中的意義與數學背景：
+
+```python
+Tx (發送)：
+ time_signal = np.fft.ifft(qpsk_symbols)   # 使用公式 (2)
+
+Channel（通道）：
+ received_signal = time_signal + noise
+
+Rx (接收)：
+ recovered_symbols = np.fft.fft(received_signal)  # 使用公式 (4)
+```
+
+---
+
+## 一、Tx（發送端）：IFFT 產生時域 OFDM 訊號
+
+### 1. 輸入：`qpsk_symbols`
+
+* `qpsk_symbols` 為**頻域資料**
+* 每一個元素代表一個 **子載波（Subcarrier）** 上的 QPSK 符號
+* 形式如下：
+
+[
+X[k], \quad k = 0, 1, 2, \dots, N-1
+]
+
+其中：
+
+* (N)：子載波數量（FFT size）
+* (X[k])：第 (k) 個子載波上的複數調變符號
+
+---
+
+### 2. IFFT（公式 2）：頻域 → 時域
+
+```python
+time_signal = np.fft.ifft(qpsk_symbols)
+```
+
+對應的數學公式為：
+
+[
+x[n] = \frac{1}{N} \sum_{k=0}^{N-1} X[k] e^{j2\pi kn/N}, \quad n = 0, 1, \dots, N-1
+]
+
+#### 意義說明：
+
+* 將 **N 個子載波** 疊加成一個時域 OFDM 符號
+* 每一個子載波彼此正交（Orthogonal）
+* `time_signal` 是實際「送到空中 / 線路上」的訊號
+
+📌 **重點概念**：
+
+> IFFT = 把「很多頻率的資料」合成「一段時間的波形」
+
+---
+
+## 二、Channel（通道）：加入雜訊
+
+```python
+received_signal = time_signal + noise
+```
+
+### 1. 通道模型（簡化）
+
+此處使用最基本的 **AWGN（Additive White Gaussian Noise）** 模型：
+
+[
+y[n] = x[n] + w[n]
+]
+
+其中：
+
+* (x[n])：發送端 OFDM 時域訊號
+* (w[n])：高斯白雜訊
+* (y[n])：接收端接收到的時域訊號
+
+---
+
+### 2. 為何加雜訊？
+
+* 模擬實際無線/有線通道
+* 測試系統對雜訊的抗干擾能力
+* SNR 越低，錯誤率越高
+
+---
+
+## 三、Rx（接收端）：FFT 還原頻域符號
+
+### 1. FFT（公式 4）：時域 → 頻域
+
+```python
+recovered_symbols = np.fft.fft(received_signal)
+```
+
+對應的數學公式為：
+
+[
+Y[k] = \sum_{n=0}^{N-1} y[n] e^{-j2\pi kn/N}, \quad k = 0, 1, \dots, N-1
+]
+
+---
+
+### 2. 意義說明
+
+* 將接收到的時域 OFDM 波形拆回各個子載波
+* 每一個 (Y[k]) 對應原本的 (X[k])
+* 若雜訊不大：
+
+[
+Y[k] \approx X[k]
+]
+
+之後即可進行：
+
+* QPSK 解調
+* 判斷 bit 0 / 1
+
+📌 **重點概念**：
+
+> FFT = 把「一段時間的混合波形」拆回「各個頻率的資料」
+
+---
+
+## 四、整體流程總結
+
+```text
+Bits
+ ↓ QPSK 調變
+Frequency-domain symbols (X[k])
+ ↓ IFFT
+Time-domain OFDM signal (x[n])
+ ↓ Channel + Noise
+Received signal (y[n])
+ ↓ FFT
+Recovered symbols (Y[k])
+ ↓ QPSK 解調
+Bits
+```
+
+---
+
+## 五、補充說明（實務系統）
+
+實際 OFDM 系統通常還會包含：
+
+* Cyclic Prefix (CP)
+* 通道衰減與等化（Channel Estimation / Equalization）
+* 多徑效應
+* 同步（Timing / Frequency Offset）
+
+本範例為 **最簡化 OFDM 架構**，用於理解 FFT / IFFT 的核心角色。
+
+---
+
+📘 **一句話總結**：
+
+> OFDM 的精髓在於：
+> **Tx 用 IFFT 合成多子載波，Rx 用 FFT 再把它們分離回來。**
+
+---
+
+## 1. 發送端 (Tx): 調變
+**程式碼：**
+```python
+time_signal = np.fft.ifft(qpsk_symbols)
 ## 圖表一：OFDM Orthogonal Subcarriers (正交子載波)
 
 這張圖（左側圖表）展示了 OFDM 訊號在**頻率域**上的樣子。這是理解 OFDM 如何節省頻寬並避免干擾的關鍵。
